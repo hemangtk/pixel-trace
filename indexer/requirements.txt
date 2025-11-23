@@ -10,6 +10,6 @@ google-auth
 google-auth-httplib2
 google-auth-oauthlib
 insightface
-onnxruntime-gpu==1.17.1
+onnxruntime-gpu==1.18.0
 qdrant-client
 runpod
