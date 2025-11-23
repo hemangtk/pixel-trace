@@ -80,7 +80,7 @@ def ensure_qdrant_client():
         raise SystemExit("QDRANT_URL env var must be set")
     qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
-ddef ensure_insightface():
+def ensure_insightface():
     global app
     if app is not None:
         return
