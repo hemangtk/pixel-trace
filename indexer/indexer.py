@@ -84,23 +84,23 @@ def ensure_insightface():
     global app
     if app is not None:
         return
+
     print("Initializing InsightFace FaceAnalysis...")
 
-    # Set ONNX providers based on CTX_ID - match working Colab approach
-    if CTX_ID >= 0:
-        # GPU mode - ONLY use CUDA provider (fail loudly if it doesn't work)
-        providers = ['CUDAExecutionProvider']
-        print(f"Using GPU mode (ctx_id={CTX_ID}) with providers: {providers}")
-    else:
-        # CPU mode
-        providers = ['CPUExecutionProvider']
-        print(f"Using CPU mode (ctx_id={CTX_ID})")
+    # Always use GPU
+    providers = ["CUDAExecutionProvider"]
+    print(f"Using fastest GPU-only model (antelopev2) with providers: {providers}")
 
-    # create FaceAnalysis app - model_dir must contain the pretrained model files (insightface)
-    app = FaceAnalysis(model_dir=MODEL_DIR, providers=providers)
-    # prepare: ctx_id = -1 -> CPU, 0 -> GPU0
-    app.prepare(ctx_id=CTX_ID, det_size=(640, 640))
-    print(f"InsightFace initialized successfully with ctx_id={CTX_ID}")
+    # Load GPU-only model (no ONNX)
+    app = FaceAnalysis(
+        name="antelopev2",
+        providers=providers
+    )
+
+    # ctx_id=0 → GPU, det_size kept same
+    app.prepare(ctx_id=0, det_size=(640, 640))
+
+    print("InsightFace (antelopev2) initialized on GPU successfully")
 
 def ensure_drive_service():
     global drive_service, drive_creds

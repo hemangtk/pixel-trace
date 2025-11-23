@@ -1,5 +1,6 @@
 # Use CUDA 12.3 with cuDNN 9 devel image (includes complete cuDNN libraries)
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+FROM nvidia/cuda:12.3.2-cudnn9-runtime-ubuntu22.04
+
 
 
 ENV DEBIAN_FRONTEND=noninteractive
