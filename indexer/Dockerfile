@@ -27,5 +27,8 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
+# Make entrypoint.sh executable
+RUN chmod +x /app/entrypoint.sh
+
 # Serverless mode → worker starts with Python
 CMD ["python3", "serverless_worker.py"]
