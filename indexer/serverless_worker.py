@@ -4,49 +4,68 @@ import subprocess
 import json
 
 def handler(event):
-    input_data = event["input"]
+    try:
+        print("Handler started")
+        input_data = event["input"]
 
-    drive_folder = input_data["drive_folder_id"]
-    owner_id = input_data.get("owner_id", "public")
-    event_name = input_data.get("event_name", "event")
+        print(f"Received input: {json.dumps(input_data)}")
 
-    # Environment for indexer
-    os.environ["DRIVE_FOLDER_ID"] = drive_folder
-    os.environ["OWNER_ID"] = owner_id
-    os.environ["EVENT_NAME"] = event_name
+        drive_folder = input_data["drive_folder_id"]
+        owner_id = input_data.get("owner_id", "public")
+        event_name = input_data.get("event_name", "event")
 
-    # Qdrant secrets
-    os.environ["QDRANT_URL"] = os.environ.get("QDRANT_URL", "")
-    os.environ["QDRANT_API_KEY"] = os.environ.get("QDRANT_API_KEY", "")
+        print(f"Processing: drive_folder={drive_folder}, owner={owner_id}, event={event_name}")
 
-    # Service account file
-    os.environ["SERVICE_ACCOUNT_FILE"] = os.environ.get("GCP_SERVICE_ACCOUNT", "")
+        # Environment for indexer
+        os.environ["DRIVE_FOLDER_ID"] = drive_folder
+        os.environ["OWNER_ID"] = owner_id
+        os.environ["EVENT_NAME"] = event_name
 
-    process = subprocess.Popen(
-        ["/bin/bash", "/app/entrypoint.sh"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True
-    )
+        # Qdrant secrets
+        os.environ["QDRANT_URL"] = os.environ.get("QDRANT_URL", "")
+        os.environ["QDRANT_API_KEY"] = os.environ.get("QDRANT_API_KEY", "")
 
-    logs = []
-    for line in process.stdout:
-        logs.append(line.strip())
-    process.wait()
+        # Service account file
+        os.environ["SERVICE_ACCOUNT_FILE"] = os.environ.get("GCP_SERVICE_ACCOUNT", "")
 
-    manifest_path = f"/app/index_manifest_{owner_id}_{event_name}.json"
-    manifest = None
+        print("Starting subprocess...")
+        process = subprocess.Popen(
+            ["/bin/bash", "/app/entrypoint.sh"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
 
-    if os.path.exists(manifest_path):
-        with open(manifest_path, "r") as f:
-            manifest = json.load(f)
-    else:
-        manifest = {"status": "manifest not found"}
+        logs = []
+        for line in process.stdout:
+            print(f"[subprocess] {line.strip()}")
+            logs.append(line.strip())
+        process.wait()
 
-    return {
-        "exit_code": process.returncode,
-        "logs": logs[-60:], 
-        "manifest": manifest
-    }
+        print(f"Subprocess finished with exit code: {process.returncode}")
+
+        manifest_path = f"/app/index_manifest_{owner_id}_{event_name}.json"
+        manifest = None
+
+        if os.path.exists(manifest_path):
+            with open(manifest_path, "r") as f:
+                manifest = json.load(f)
+        else:
+            manifest = {"status": "manifest not found"}
+
+        return {
+            "exit_code": process.returncode,
+            "logs": logs[-60:],
+            "manifest": manifest
+        }
+    except Exception as e:
+        print(f"ERROR in handler: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "exit_code": -1,
+            "logs": [f"Handler error: {str(e)}"],
+            "manifest": {"error": str(e)}
+        }
 
 runpod.serverless.start({"handler": handler})
