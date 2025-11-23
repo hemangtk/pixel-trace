@@ -87,59 +87,33 @@ def ensure_insightface():
 
     print("Initializing InsightFace FaceAnalysis...")
 
-    # Always use GPU
-    providers = ["CUDAExecutionProvider"]
-    print(f"Using fastest GPU-only model (antelopev2) with providers: {providers}")
+    # Ensure model dir exists and is writable (FaceAnalysis will download models here)
+    os.makedirs(MODEL_DIR, exist_ok=True)
 
-    # Load GPU-only model (no ONNX)
+    # Prefer GPU but allow CPU as fallback (keeps speed + safer init)
+    # If you want *strict* GPU only, change providers to ["CUDAExecutionProvider"]
+    providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+    print(f"Using model_dir={MODEL_DIR}, ctx_id={CTX_ID}, providers={providers}")
+
+    # Use antelopev2 (pure PyTorch pipeline) and point to model dir so models are
+    # downloaded/extracted where FaceAnalysis expects them.
     app = FaceAnalysis(
         name="antelopev2",
+        model_dir=MODEL_DIR,
         providers=providers
     )
 
-    # ctx_id=0 → GPU, det_size kept same
-    app.prepare(ctx_id=0, det_size=(640, 640))
+    # prepare: ctx_id = -1 -> CPU, 0 -> GPU0
+    app.prepare(ctx_id=CTX_ID, det_size=(640, 640))
 
-    print("InsightFace (antelopev2) initialized on GPU successfully")
+    # quick verification (helpful during debugging)
+    try:
+        print("Loaded models:", list(app.models.keys()))
+    except Exception as _:
+        print("Warning: could not list app.models after prepare()")
 
-def ensure_drive_service():
-    global drive_service, drive_creds
-    if drive_service is not None:
-        return
-    if not os.path.exists(SERVICE_ACCOUNT_FILE):
-        raise SystemExit(f"Service account file not found at {SERVICE_ACCOUNT_FILE}")
-    # load creds and store globally so we can refresh/get token later
-    drive_creds = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE,
-        scopes=['https://www.googleapis.com/auth/drive.readonly']
-    )
-    drive_service = build('drive', 'v3', credentials=drive_creds)
+    print(f"InsightFace (antelopev2) initialized on ctx_id={CTX_ID}")
 
-def ensure_collection(dim):
-    """
-    Ensure Qdrant collection exists with specified dim.
-    Thread-safe.
-    """
-    global _collection_created, _collection_dim, qdrant
-    ensure_qdrant_client()
-    if _collection_created and _collection_dim == dim:
-        return
-    with _collection_lock:
-        if _collection_created and _collection_dim == dim:
-            return
-        try:
-            qdrant.get_collection(collection_name=COLLECTION_NAME)
-            _collection_created = True
-            _collection_dim = dim
-            return
-        except Exception:
-            qdrant.create_collection(
-                collection_name=COLLECTION_NAME,
-                vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
-            )
-            _collection_created = True
-            _collection_dim = dim
-            return
 
 def decode_image_from_bytes(content_bytes, file_name):
     lower = file_name.lower()
