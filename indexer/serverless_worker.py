@@ -29,8 +29,14 @@ def handler(event):
         os.environ["SERVICE_ACCOUNT_FILE"] = os.environ.get("GCP_SERVICE_ACCOUNT", "")
 
         print("Starting subprocess...")
+        print(f"DEBUG: Set DRIVE_FOLDER_ID={os.environ.get('DRIVE_FOLDER_ID')}")
+        print(f"DEBUG: Set OWNER_ID={os.environ.get('OWNER_ID')}")
+        print(f"DEBUG: Set EVENT_NAME={os.environ.get('EVENT_NAME')}")
+
         # Explicitly pass environment to subprocess
         env = os.environ.copy()
+        print(f"DEBUG: Env copy has DRIVE_FOLDER_ID={env.get('DRIVE_FOLDER_ID')}")
+
         process = subprocess.Popen(
             ["/bin/bash", "/app/entrypoint.sh"],
             stdout=subprocess.PIPE,
