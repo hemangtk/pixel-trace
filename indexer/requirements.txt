@@ -1,0 +1,14 @@
+numpy
+opencv-python-headless
+Pillow
+rawpy
+pyheif
+requests
+tqdm
+google-api-python-client
+google-auth
+google-auth-httplib2
+google-auth-oauthlib
+insightface
+onnxruntime-gpu
+qdrant-client

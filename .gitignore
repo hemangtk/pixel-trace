@@ -1,0 +1,8 @@
+node_modules/
+*.pyc
+__pycache__/
+serviceAcc.json
+.env
+index_manifest_*
+.vscode/
+.DS_Store

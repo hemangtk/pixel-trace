@@ -1,0 +1,9 @@
+__pycache__
+*.pyc
+*.pkl
+*.json
+serviceAcc.json
+index_manifest_*
+models/
+.vscode
+.env

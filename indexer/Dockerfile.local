@@ -1,0 +1,33 @@
+# indexer/Dockerfile.local — lightweight CPU image for local testing
+FROM python:3.10-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgl1 \
+    ffmpeg \
+    libjpeg-dev \
+    libheif-dev \
+    libraw-dev \
+    libturbojpeg0-dev \
+    git \
+    curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY requirements.txt /app/requirements.txt
+
+# Replace GPU onnxruntime with CPU version
+RUN sed -i 's/onnxruntime-gpu/onnxruntime/g' /app/requirements.txt || true
+
+RUN pip install --upgrade pip setuptools wheel \
+    && pip install -r /app/requirements.txt
+
+COPY . /app
+
+ENV MODEL_DIR=/app/models/antelope
+ENV SERVICE_ACCOUNT_FILE=/app/serviceAcc.json
+
+# Correct ENTRYPOINT that forwards args to python
+ENTRYPOINT ["python3", "indexer.py"]
