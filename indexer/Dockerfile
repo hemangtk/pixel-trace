@@ -1,7 +1,12 @@
-# Use CUDA 12 base image for GPU support
-FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
+# Use CUDA 12 with cuDNN 9 devel image (includes complete cuDNN libraries)
+FROM nvidia/cuda:12.2.2-cudnn9-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+
+# Set CUDA paths
+ENV CUDA_HOME=/usr/local/cuda
+ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+ENV PATH=/usr/local/cuda/bin:$PATH
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
