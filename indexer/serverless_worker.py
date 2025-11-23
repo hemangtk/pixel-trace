@@ -20,7 +20,7 @@ def handler(event):
     os.environ["QDRANT_API_KEY"] = os.environ.get("QDRANT_API_KEY", "")
 
     # Service account file
-    os.environ["SERVICE_ACCOUNT_FILE"] = "/runpod_secrets/GCP_SERVICE_ACCOUNT"
+    os.environ["SERVICE_ACCOUNT_FILE"] = os.environ.get("GCP_SERVICE_ACCOUNT", "")
 
     process = subprocess.Popen(
         ["/bin/bash", "/app/entrypoint.sh"],
