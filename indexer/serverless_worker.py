@@ -16,26 +16,19 @@ def handler(event):
 
         print(f"Processing: drive_folder={drive_folder}, owner={owner_id}, event={event_name}")
 
-        # Environment for indexer
-        os.environ["DRIVE_FOLDER_ID"] = drive_folder
-        os.environ["OWNER_ID"] = owner_id
-        os.environ["EVENT_NAME"] = event_name
+        # Build environment dictionary explicitly
+        env = os.environ.copy()
 
-        # Qdrant secrets
-        os.environ["QDRANT_URL"] = os.environ.get("QDRANT_URL", "")
-        os.environ["QDRANT_API_KEY"] = os.environ.get("QDRANT_API_KEY", "")
-
-        # Service account file
-        os.environ["SERVICE_ACCOUNT_FILE"] = os.environ.get("GCP_SERVICE_ACCOUNT", "")
+        # Override with our specific values
+        env["DRIVE_FOLDER_ID"] = drive_folder
+        env["OWNER_ID"] = owner_id
+        env["EVENT_NAME"] = event_name
+        env["SERVICE_ACCOUNT_FILE"] = "/runpod_secrets/GCP_SERVICE_ACCOUNT"
 
         print("Starting subprocess...")
-        print(f"DEBUG: Set DRIVE_FOLDER_ID={os.environ.get('DRIVE_FOLDER_ID')}")
-        print(f"DEBUG: Set OWNER_ID={os.environ.get('OWNER_ID')}")
-        print(f"DEBUG: Set EVENT_NAME={os.environ.get('EVENT_NAME')}")
-
-        # Explicitly pass environment to subprocess
-        env = os.environ.copy()
-        print(f"DEBUG: Env copy has DRIVE_FOLDER_ID={env.get('DRIVE_FOLDER_ID')}")
+        print(f"DEBUG: Env has DRIVE_FOLDER_ID={env.get('DRIVE_FOLDER_ID')}")
+        print(f"DEBUG: Env has OWNER_ID={env.get('OWNER_ID')}")
+        print(f"DEBUG: Env has EVENT_NAME={env.get('EVENT_NAME')}")
 
         process = subprocess.Popen(
             ["/bin/bash", "/app/entrypoint.sh"],
