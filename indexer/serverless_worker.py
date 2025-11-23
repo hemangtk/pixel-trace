@@ -16,6 +16,18 @@ def handler(event):
 
         print(f"Processing: drive_folder={drive_folder}, owner={owner_id}, event={event_name}")
 
+        # Handle GCP service account secret - write to file if it's an env var
+        service_account_path = "/tmp/serviceAcc.json"
+        if os.environ.get("GCP_SERVICE_ACCOUNT"):
+            print("Writing GCP_SERVICE_ACCOUNT env var to file...")
+            with open(service_account_path, "w") as f:
+                f.write(os.environ.get("GCP_SERVICE_ACCOUNT"))
+        elif os.path.exists("/runpod_secrets/GCP_SERVICE_ACCOUNT"):
+            service_account_path = "/runpod_secrets/GCP_SERVICE_ACCOUNT"
+            print("Using GCP_SERVICE_ACCOUNT from /runpod_secrets")
+        else:
+            print("WARNING: No GCP_SERVICE_ACCOUNT found")
+
         # Build environment dictionary explicitly
         env = os.environ.copy()
 
@@ -23,7 +35,7 @@ def handler(event):
         env["DRIVE_FOLDER_ID"] = drive_folder
         env["OWNER_ID"] = owner_id
         env["EVENT_NAME"] = event_name
-        env["SERVICE_ACCOUNT_FILE"] = "/runpod_secrets/GCP_SERVICE_ACCOUNT"
+        env["SERVICE_ACCOUNT_FILE"] = service_account_path
 
         print("Starting subprocess...")
         print(f"DEBUG: Env has DRIVE_FOLDER_ID={env.get('DRIVE_FOLDER_ID')}")
