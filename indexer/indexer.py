@@ -85,17 +85,29 @@ def ensure_insightface():
     if app is not None:
         return
     print("Initializing InsightFace FaceAnalysis...")
-    # Use providers: if GPU, ONNX runtime GPU provider will be used by insightface
-    providers = None
+
+    # Set ONNX providers based on CTX_ID
+    if CTX_ID >= 0:
+        # GPU mode - use CUDA provider
+        providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+        print(f"Using GPU mode (ctx_id={CTX_ID}) with providers: {providers}")
+    else:
+        # CPU mode
+        providers = ['CPUExecutionProvider']
+        print(f"Using CPU mode (ctx_id={CTX_ID})")
+
     # create FaceAnalysis app - model_dir must contain the pretrained model files (insightface)
-    app = FaceAnalysis(model_dir=MODEL_DIR, providers=None)
+    app = FaceAnalysis(model_dir=MODEL_DIR, providers=providers)
     # prepare: ctx_id = -1 -> CPU, 0 -> GPU0
     try:
         app.prepare(ctx_id=CTX_ID, det_size=(640, 640))
+        print(f"InsightFace initialized successfully with ctx_id={CTX_ID}")
     except Exception as e:
-        print("Warning: failed to prepare with ctx_id", CTX_ID, "error:", e)
+        print(f"Warning: failed to prepare with ctx_id={CTX_ID}, error: {e}")
         print("Retrying with CPU (ctx_id=-1)")
+        app = FaceAnalysis(model_dir=MODEL_DIR, providers=['CPUExecutionProvider'])
         app.prepare(ctx_id=-1, det_size=(640, 640))
+        print("InsightFace initialized with CPU fallback")
 
 def ensure_drive_service():
     global drive_service, drive_creds
