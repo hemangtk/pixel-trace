@@ -8,11 +8,7 @@ echo "DEBUG: DRIVE_FOLDER_ID=${DRIVE_FOLDER_ID:-NOT_SET}"
 echo "DEBUG: OWNER_ID=${OWNER_ID:-NOT_SET}"
 echo "DEBUG: EVENT_NAME=${EVENT_NAME:-NOT_SET}"
 echo "DEBUG: QDRANT_URL=${QDRANT_URL:-NOT_SET}"
-
-# Correct way: Service account JSON file from the secret
-export SERVICE_ACCOUNT_FILE="/runpod_secrets/GCP_SERVICE_ACCOUNT"
-
-echo "Service account file present: $SERVICE_ACCOUNT_FILE"
+echo "DEBUG: SERVICE_ACCOUNT_FILE=${SERVICE_ACCOUNT_FILE:-NOT_SET}"
 
 # Run indexer
 python3 indexer.py "$@" 2>&1 | tee /tmp/indexer.log
