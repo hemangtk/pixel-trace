@@ -80,26 +80,47 @@ def ensure_qdrant_client():
         raise SystemExit("QDRANT_URL env var must be set")
     qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
-def ensure_insightface():
+ddef ensure_insightface():
     global app
     if app is not None:
         return
 
     print("Initializing InsightFace FaceAnalysis...")
 
-    providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-    print(f"Using ctx_id={CTX_ID}, providers={providers}")
+    # Explicit stable path
+    antelope_dir = "/app/models/antelopev2"
+    os.makedirs(antelope_dir, exist_ok=True)
 
-    # DO NOT pass model_dir for antelopev2 — it breaks detection loading.
+    # If model is missing, force-download ZIP and extract manually
+    zip_path = os.path.join(antelope_dir, "antelopev2.zip")
+
+    if not os.path.exists(os.path.join(antelope_dir, "detection")):
+        print("Downloading antelopev2 model manually...")
+
+        # Download ZIP
+        import requests
+        url = "https://github.com/deepinsight/insightface/releases/download/v0.7/antelopev2.zip"
+        r = requests.get(url)
+        open(zip_path, "wb").write(r.content)
+
+        print("Extracting antelopev2 model...")
+        import zipfile
+        with zipfile.ZipFile(zip_path, 'r') as z:
+            z.extractall(antelope_dir)
+
+        print("Extraction complete.")
+
+    providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+
     app = FaceAnalysis(
         name="antelopev2",
+        model_dir=antelope_dir,
         providers=providers
     )
-
-    app.prepare(ctx_id=CTX_ID, det_size=(640, 640))
+    app.prepare(ctx_id=0, det_size=(640, 640))
 
     print("Loaded models:", list(app.models.keys()))
-    print(f"InsightFace (antelopev2) initialized successfully with ctx_id={CTX_ID}")
+    print("Antelopev2 initialized successfully!")
 
 
 def decode_image_from_bytes(content_bytes, file_name):
