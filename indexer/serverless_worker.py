@@ -29,11 +29,14 @@ def handler(event):
         os.environ["SERVICE_ACCOUNT_FILE"] = os.environ.get("GCP_SERVICE_ACCOUNT", "")
 
         print("Starting subprocess...")
+        # Explicitly pass environment to subprocess
+        env = os.environ.copy()
         process = subprocess.Popen(
             ["/bin/bash", "/app/entrypoint.sh"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            text=True
+            text=True,
+            env=env
         )
 
         logs = []
