@@ -3,6 +3,12 @@ set -euo pipefail
 
 echo "ENTRYPOINT: Starting indexer..."
 
+# Debug: Show environment variables
+echo "DEBUG: DRIVE_FOLDER_ID=${DRIVE_FOLDER_ID:-NOT_SET}"
+echo "DEBUG: OWNER_ID=${OWNER_ID:-NOT_SET}"
+echo "DEBUG: EVENT_NAME=${EVENT_NAME:-NOT_SET}"
+echo "DEBUG: QDRANT_URL=${QDRANT_URL:-NOT_SET}"
+
 # Correct way: Service account JSON file from the secret
 export SERVICE_ACCOUNT_FILE="/runpod_secrets/GCP_SERVICE_ACCOUNT"
 
