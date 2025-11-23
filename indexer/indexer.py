@@ -87,32 +87,19 @@ def ensure_insightface():
 
     print("Initializing InsightFace FaceAnalysis...")
 
-    # Ensure model dir exists and is writable (FaceAnalysis will download models here)
-    os.makedirs(MODEL_DIR, exist_ok=True)
-
-    # Prefer GPU but allow CPU as fallback (keeps speed + safer init)
-    # If you want *strict* GPU only, change providers to ["CUDAExecutionProvider"]
     providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-    print(f"Using model_dir={MODEL_DIR}, ctx_id={CTX_ID}, providers={providers}")
+    print(f"Using ctx_id={CTX_ID}, providers={providers}")
 
-    # Use antelopev2 (pure PyTorch pipeline) and point to model dir so models are
-    # downloaded/extracted where FaceAnalysis expects them.
+    # DO NOT pass model_dir for antelopev2 — it breaks detection loading.
     app = FaceAnalysis(
         name="antelopev2",
-        model_dir=MODEL_DIR,
         providers=providers
     )
 
-    # prepare: ctx_id = -1 -> CPU, 0 -> GPU0
     app.prepare(ctx_id=CTX_ID, det_size=(640, 640))
 
-    # quick verification (helpful during debugging)
-    try:
-        print("Loaded models:", list(app.models.keys()))
-    except Exception as _:
-        print("Warning: could not list app.models after prepare()")
-
-    print(f"InsightFace (antelopev2) initialized on ctx_id={CTX_ID}")
+    print("Loaded models:", list(app.models.keys()))
+    print(f"InsightFace (antelopev2) initialized successfully with ctx_id={CTX_ID}")
 
 
 def decode_image_from_bytes(content_bytes, file_name):
