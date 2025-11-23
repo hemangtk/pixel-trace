@@ -30,5 +30,8 @@ COPY . /app
 # Make entrypoint.sh executable
 RUN chmod +x /app/entrypoint.sh
 
+# Fix for RunPod: Remove docker-init if it exists (conflicts with RunPod's init)
+RUN rm -f /usr/sbin/docker-init /sbin/docker-init || true
+
 # Serverless mode → worker starts with Python
 CMD ["python3", "serverless_worker.py"]
