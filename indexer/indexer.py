@@ -44,7 +44,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 # insightface & onnx/ort
-from insightface.app import FaceAnalysis
+FaceAnalysis = None
 
 # qdrant
 from qdrant_client import QdrantClient
@@ -81,44 +81,47 @@ def ensure_qdrant_client():
     qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 def ensure_insightface():
-    global app
+    global app, FaceAnalysis
     if app is not None:
         return
 
     print("Initializing InsightFace FaceAnalysis...")
 
-    ROOT_DIR = "/app"                     # IMPORTANT FIX
-    MODEL_DIR = "/app/models/antelopev2"  # Must be inside ROOT/models/
-
+    ROOT_DIR = "/app"
+    MODEL_DIR = "/app/models/antelopev2"
     os.makedirs(MODEL_DIR, exist_ok=True)
 
     detection_dir = os.path.join(MODEL_DIR, "detection")
 
+    # 1) Make sure model exists BEFORE importing insightface
     if not os.path.exists(detection_dir):
         print("Downloading antelopev2 model manually...")
+        import requests, zipfile
 
-        import requests
-        url = "https://github.com/deepinsight/insightface/releases/download/v0.7/antelopev2.zip"
         zip_path = os.path.join(MODEL_DIR, "antelopev2.zip")
         with open(zip_path, "wb") as f:
-            f.write(requests.get(url).content)
+            f.write(requests.get(
+                "https://github.com/deepinsight/insightface/releases/download/v0.7/antelopev2.zip"
+            ).content)
 
         print("Extracting antelopev2 model...")
-        import zipfile
         with zipfile.ZipFile(zip_path, "r") as z:
             z.extractall(MODEL_DIR)
-
         print("Extraction complete.")
+
+    # 2) NOW import insightface AFTER extraction
+    if FaceAnalysis is None:
+        from insightface.app import FaceAnalysis as _FA
+        FaceAnalysis = _FA
 
     providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
 
     app = FaceAnalysis(
         name="antelopev2",
-        root=ROOT_DIR,          # FIXED
-        model_dir=MODEL_DIR,    # FIXED
+        root=ROOT_DIR,
+        model_dir=MODEL_DIR,
         providers=providers
     )
-
     app.prepare(ctx_id=0, det_size=(640, 640))
 
     print("Loaded models:", list(app.models.keys()))
