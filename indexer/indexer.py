@@ -88,6 +88,10 @@ def ensure_insightface():
         return
 
     print("Initializing InsightFace FaceAnalysis...")
+    print("USING MODEL_DIR =", MODEL_DIR)
+    print("EXTRACTING INTO =", INSIGHT_ROOT)
+    print("CHECK EXISTS:", os.path.exists(INSIGHT_ROOT))
+
 
     ROOT_DIR = "/app"
     INSIGHT_ROOT = "/app/.insightface/models"
@@ -405,6 +409,7 @@ def run_indexing(owner_id, folder_id, event_name, local_folder=None):
     return manifest_path
 
 if __name__ == "__main__":
+    os.system("cat /app/indexer.py | sed -n '1,200p'")
     parser = argparse.ArgumentParser()
     parser.add_argument("--folder-id", dest="folder_id", default=os.getenv("DRIVE_FOLDER_ID"))
     parser.add_argument("--event-name", dest="event_name", default=os.getenv("EVENT_NAME", "event"))
