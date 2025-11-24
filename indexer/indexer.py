@@ -87,13 +87,11 @@ def ensure_insightface():
 
     print("Initializing InsightFace FaceAnalysis...")
 
-    ROOT_DIR = "/app/models"
-    MODEL_DIR = "/app/models/antelopev2"
+    ROOT_DIR = "/app"                     # IMPORTANT FIX
+    MODEL_DIR = "/app/models/antelopev2"  # Must be inside ROOT/models/
 
-    # Ensure dirs exist
     os.makedirs(MODEL_DIR, exist_ok=True)
 
-    # Manual download ONLY if no detection model exists yet
     detection_dir = os.path.join(MODEL_DIR, "detection")
 
     if not os.path.exists(detection_dir):
@@ -101,7 +99,6 @@ def ensure_insightface():
 
         import requests
         url = "https://github.com/deepinsight/insightface/releases/download/v0.7/antelopev2.zip"
-
         zip_path = os.path.join(MODEL_DIR, "antelopev2.zip")
         with open(zip_path, "wb") as f:
             f.write(requests.get(url).content)
@@ -115,11 +112,10 @@ def ensure_insightface():
 
     providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
 
-    # KEY FIX: pass BOTH root and model_dir
     app = FaceAnalysis(
         name="antelopev2",
-        root=ROOT_DIR,
-        model_dir=MODEL_DIR,
+        root=ROOT_DIR,          # FIXED
+        model_dir=MODEL_DIR,    # FIXED
         providers=providers
     )
 
@@ -127,7 +123,6 @@ def ensure_insightface():
 
     print("Loaded models:", list(app.models.keys()))
     print("Antelopev2 initialized successfully!")
-
 
 def decode_image_from_bytes(content_bytes, file_name):
     lower = file_name.lower()
