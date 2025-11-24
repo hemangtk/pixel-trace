@@ -135,6 +135,25 @@ def ensure_insightface():
     print("Loaded models:", list(app.models.keys()))
     print("Antelopev2 initialized successfully!")
 
+def ensure_drive_service():
+    global drive_service, drive_creds
+
+    if drive_service is not None:
+        return
+
+    if not os.path.exists(SERVICE_ACCOUNT_FILE):
+        raise RuntimeError(f"Service account file not found at {SERVICE_ACCOUNT_FILE}")
+
+    drive_creds = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE,
+        scopes=["https://www.googleapis.com/auth/drive.readonly"]
+    )
+
+    drive_service = build("drive", "v3", credentials=drive_creds)
+
+    print("Initialized Google Drive service")
+
+
 def decode_image_from_bytes(content_bytes, file_name):
     lower = file_name.lower()
     try:
