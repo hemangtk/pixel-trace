@@ -83,32 +83,29 @@ def ensure_qdrant_client():
     qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 def ensure_insightface():
-    global app, FaceAnalysis
+    global app, FaceAnalysis, MODEL_DIR
     if app is not None:
         return
 
     print("Initializing InsightFace FaceAnalysis...")
-    print("USING MODEL_DIR =", MODEL_DIR)
-    print("EXTRACTING INTO =", INSIGHT_ROOT)
-    print("CHECK EXISTS:", os.path.exists(INSIGHT_ROOT))
 
+    # ROOT for insightface
+    ROOT_DIR = "/app/.insightface"
+    INSIGHT_ROOT = os.path.join(ROOT_DIR, "models")
 
-    ROOT_DIR = "/app"
-    INSIGHT_ROOT = "/app/.insightface/models"
-    MODEL_NAME = "antelopev2"
-    MODEL_DIR = f"{INSIGHT_ROOT}/{MODEL_NAME}"
-
+    # Correct MODEL_DIR
+    os.makedirs(INSIGHT_ROOT, exist_ok=True)
+    MODEL_DIR = os.path.join(INSIGHT_ROOT, "antelopev2")
     os.makedirs(MODEL_DIR, exist_ok=True)
 
     detection_dir = os.path.join(MODEL_DIR, "detection")
 
-    # 1) If model missing → download into INSIGHT_ROOT
+    # 1) Download model into INSIGHT_ROOT (important!)
     if not os.path.exists(detection_dir):
         print("Downloading antelopev2 model manually...")
         import zipfile, requests
 
         zip_path = os.path.join(INSIGHT_ROOT, "antelopev2.zip")
-        os.makedirs(INSIGHT_ROOT, exist_ok=True)
 
         with open(zip_path, "wb") as f:
             f.write(requests.get(
@@ -117,10 +114,10 @@ def ensure_insightface():
 
         print("Extracting antelopev2 model...")
         with zipfile.ZipFile(zip_path, "r") as z:
-            z.extractall(INSIGHT_ROOT)   # <-- FIXED
+            z.extractall(INSIGHT_ROOT)   # extract *into* INSIGHT_ROOT
         print("Extraction complete.")
 
-    # 2) Import insightface AFTER extraction
+    # 2) Import AFTER extraction
     if FaceAnalysis is None:
         from insightface.app import FaceAnalysis as _FA
         FaceAnalysis = _FA
@@ -129,7 +126,7 @@ def ensure_insightface():
 
     app = FaceAnalysis(
         name="antelopev2",
-        root=ROOT_DIR,     # always forces .insightface/models
+        root=ROOT_DIR,        # CRITICAL: must point to .insightface
         providers=providers
     )
 
