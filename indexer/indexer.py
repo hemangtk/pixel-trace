@@ -87,19 +87,16 @@ def ensure_insightface():
 
     print("Initializing InsightFace FaceAnalysis...")
 
-    # FIXED PATH STRUCTURE
     ROOT_DIR = "/app"
-    MODEL_DIR = "/app/.insightface/models/antelopev2"
+    INSIGHT_ROOT = "/app/.insightface/models"
+    MODEL_NAME = "antelopev2"
 
-    # Remove corrupted default cache
-    import shutil
-    shutil.rmtree("/root/.insightface", ignore_errors=True)
-
+    MODEL_DIR = f"{INSIGHT_ROOT}/{MODEL_NAME}"
     os.makedirs(MODEL_DIR, exist_ok=True)
 
     detection_dir = os.path.join(MODEL_DIR, "detection")
 
-    # 1) Download BEFORE importing insightface
+    # 1) Download only if missing
     if not os.path.exists(detection_dir):
         print("Downloading antelopev2 model manually...")
         import requests, zipfile
@@ -112,11 +109,10 @@ def ensure_insightface():
 
         print("Extracting antelopev2 model...")
         with zipfile.ZipFile(zip_path, "r") as z:
-            z.extractall(MODEL_DIR)
-
+            z.extractall(INSIGHT_ROOT)   # FIXED PATH
         print("Extraction complete.")
 
-    # 2) Lazy import only AFTER extraction
+    # 2) Lazy import AFTER models exist
     if FaceAnalysis is None:
         from insightface.app import FaceAnalysis as _FA
         FaceAnalysis = _FA
@@ -125,8 +121,7 @@ def ensure_insightface():
 
     app = FaceAnalysis(
         name="antelopev2",
-        root=ROOT_DIR,
-        model_dir=MODEL_DIR,
+        root=ROOT_DIR,     # this forces .insightface/models as root
         providers=providers
     )
 
