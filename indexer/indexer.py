@@ -87,36 +87,42 @@ def ensure_insightface():
 
     print("Initializing InsightFace FaceAnalysis...")
 
-    # Explicit stable path
-    antelope_dir = "/app/models/antelopev2"
-    os.makedirs(antelope_dir, exist_ok=True)
+    ROOT_DIR = "/app/models"
+    MODEL_DIR = "/app/models/antelopev2"
 
-    # If model is missing, force-download ZIP and extract manually
-    zip_path = os.path.join(antelope_dir, "antelopev2.zip")
+    # Ensure dirs exist
+    os.makedirs(MODEL_DIR, exist_ok=True)
 
-    if not os.path.exists(os.path.join(antelope_dir, "detection")):
+    # Manual download ONLY if no detection model exists yet
+    detection_dir = os.path.join(MODEL_DIR, "detection")
+
+    if not os.path.exists(detection_dir):
         print("Downloading antelopev2 model manually...")
 
-        # Download ZIP
         import requests
         url = "https://github.com/deepinsight/insightface/releases/download/v0.7/antelopev2.zip"
-        r = requests.get(url)
-        open(zip_path, "wb").write(r.content)
+
+        zip_path = os.path.join(MODEL_DIR, "antelopev2.zip")
+        with open(zip_path, "wb") as f:
+            f.write(requests.get(url).content)
 
         print("Extracting antelopev2 model...")
         import zipfile
-        with zipfile.ZipFile(zip_path, 'r') as z:
-            z.extractall(antelope_dir)
+        with zipfile.ZipFile(zip_path, "r") as z:
+            z.extractall(MODEL_DIR)
 
         print("Extraction complete.")
 
     providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
 
+    # KEY FIX: pass BOTH root and model_dir
     app = FaceAnalysis(
         name="antelopev2",
-        model_dir=antelope_dir,
+        root=ROOT_DIR,
+        model_dir=MODEL_DIR,
         providers=providers
     )
+
     app.prepare(ctx_id=0, det_size=(640, 640))
 
     print("Loaded models:", list(app.models.keys()))
