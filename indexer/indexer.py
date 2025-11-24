@@ -92,18 +92,20 @@ def ensure_insightface():
     ROOT_DIR = "/app"
     INSIGHT_ROOT = "/app/.insightface/models"
     MODEL_NAME = "antelopev2"
-
     MODEL_DIR = f"{INSIGHT_ROOT}/{MODEL_NAME}"
+
     os.makedirs(MODEL_DIR, exist_ok=True)
 
     detection_dir = os.path.join(MODEL_DIR, "detection")
 
-    # 1) Download only if missing
+    # 1) If model missing → download into INSIGHT_ROOT
     if not os.path.exists(detection_dir):
         print("Downloading antelopev2 model manually...")
-        import requests, zipfile
+        import zipfile, requests
 
-        zip_path = os.path.join(MODEL_DIR, "antelopev2.zip")
+        zip_path = os.path.join(INSIGHT_ROOT, "antelopev2.zip")
+        os.makedirs(INSIGHT_ROOT, exist_ok=True)
+
         with open(zip_path, "wb") as f:
             f.write(requests.get(
                 "https://github.com/deepinsight/insightface/releases/download/v0.7/antelopev2.zip"
@@ -111,10 +113,10 @@ def ensure_insightface():
 
         print("Extracting antelopev2 model...")
         with zipfile.ZipFile(zip_path, "r") as z:
-            z.extractall(INSIGHT_ROOT)   # FIXED PATH
+            z.extractall(INSIGHT_ROOT)   # <-- FIXED
         print("Extraction complete.")
 
-    # 2) Lazy import AFTER models exist
+    # 2) Import insightface AFTER extraction
     if FaceAnalysis is None:
         from insightface.app import FaceAnalysis as _FA
         FaceAnalysis = _FA
@@ -123,7 +125,7 @@ def ensure_insightface():
 
     app = FaceAnalysis(
         name="antelopev2",
-        root=ROOT_DIR,     # this forces .insightface/models as root
+        root=ROOT_DIR,     # always forces .insightface/models
         providers=providers
     )
 
