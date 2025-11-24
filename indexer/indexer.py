@@ -50,6 +50,8 @@ FaceAnalysis = None
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import VectorParams, Distance
 
+os.system("ls -R /app/.insightface/models")
+
 # ---------------- configuration defaults ----------------
 MAX_DIM = int(os.getenv("MAX_DIM", "800"))
 SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE", "serviceAcc.json")
