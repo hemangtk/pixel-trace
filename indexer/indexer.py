@@ -82,6 +82,34 @@ def ensure_qdrant_client():
         raise SystemExit("QDRANT_URL env var must be set")
     qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
+# add near other helpers (ensure_qdrant_client etc.)
+def ensure_collection(dim):
+    """
+    Ensure Qdrant collection exists with specified dim.
+    Thread-safe.
+    """
+    global _collection_created, _collection_dim, qdrant
+    ensure_qdrant_client()
+    if _collection_created and _collection_dim == dim:
+        return
+    with _collection_lock:
+        if _collection_created and _collection_dim == dim:
+            return
+        try:
+            qdrant.get_collection(collection_name=COLLECTION_NAME)
+            _collection_created = True
+            _collection_dim = dim
+            return
+        except Exception:
+            qdrant.create_collection(
+                collection_name=COLLECTION_NAME,
+                vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
+            )
+            _collection_created = True
+            _collection_dim = dim
+            return
+
+
 def ensure_insightface():
     global app, FaceAnalysis, MODEL_DIR
     if app is not None:
@@ -122,7 +150,16 @@ def ensure_insightface():
         from insightface.app import FaceAnalysis as _FA
         FaceAnalysis = _FA
 
-    providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+    providers = [
+        ("CUDAExecutionProvider", {
+            "device_id": 0,
+            "arena_extend_strategy": "kNextPowerOfTwo",
+            "gpu_mem_limit": 4 * 1024 * 1024 * 1024,  # 4GB
+            "cudnn_conv_algo_search": "EXHAUSTIVE",
+            "do_copy_in_default_stream": True,
+        }),
+        "CPUExecutionProvider"
+    ]  
 
     app = FaceAnalysis(
         name="antelopev2",
