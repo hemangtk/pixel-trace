@@ -151,23 +151,21 @@ def ensure_insightface():
         FaceAnalysis = _FA
 
     providers = [
-        ("CUDAExecutionProvider", {
-            "device_id": 0,
-            "arena_extend_strategy": "kNextPowerOfTwo",
-            "gpu_mem_limit": 4 * 1024 * 1024 * 1024,  # 4GB
-            "cudnn_conv_algo_search": "EXHAUSTIVE",
-            "do_copy_in_default_stream": True,
-        }),
+        "CUDAExecutionProvider",
         "CPUExecutionProvider"
-    ]  
+    ]
+  
 
     app = FaceAnalysis(
         name="antelopev2",
         root=ROOT_DIR,        # CRITICAL: must point to .insightface
         providers=providers
     )
+    import onnxruntime as ort
+    print("ORT Providers:", ort.get_available_providers())
 
-    app.prepare(ctx_id=0, det_size=(640, 640))
+    app.prepare(ctx_id=0 if "CUDAExecutionProvider" in providers else -1,det_size=(640, 640))
+
 
     print("Loaded models:", list(app.models.keys()))
     print("Antelopev2 initialized successfully!")
